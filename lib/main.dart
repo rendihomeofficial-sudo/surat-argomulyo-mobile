@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
+import 'update_service.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -92,6 +93,28 @@ class _MainPersuratanScreenState extends State<MainPersuratanScreen> {
         ),
       )
       ..loadRequest(Uri.parse('https://surat.argomulyo.com/surat.html'));
+
+    // Otomatis periksa pembaruan versi APK di background setelah aplikasi terbuka
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _checkAutoUpdate();
+    });
+  }
+
+  Future<void> _checkAutoUpdate({bool showNoUpdateToast = false}) async {
+    final info = await UpdateService.checkForUpdate();
+    if (!mounted) return;
+
+    if (info != null && info.hasUpdate) {
+      UpdateDialog.show(context, info);
+    } else if (showNoUpdateToast) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Aplikasi Anda sudah menggunakan versi terbaru.'),
+          backgroundColor: Color(0xFF0F6B4F),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
   }
 
   void _navigateTo(String title, String url) {
@@ -117,14 +140,16 @@ class _MainPersuratanScreenState extends State<MainPersuratanScreen> {
             context: context,
             builder: (ctx) => AlertDialog(
               title: const Text('Keluar Aplikasi?'),
-              content: const Text('Apakah Anda yakin ingin keluar dari aplikasi Persuratan Kampung Argomulyo?'),
+              content: const Text(
+                  'Apakah Anda yakin ingin keluar dari aplikasi Persuratan Kampung Argomulyo?'),
               actions: [
                 TextButton(
                   onPressed: () => Navigator.pop(ctx, false),
                   child: const Text('Batal'),
                 ),
                 FilledButton(
-                  style: FilledButton.styleFrom(backgroundColor: const Color(0xFF0F6B4F)),
+                  style: FilledButton.styleFrom(
+                      backgroundColor: const Color(0xFF0F6B4F)),
                   onPressed: () => Navigator.pop(ctx, true),
                   child: const Text('Keluar'),
                 ),
@@ -150,7 +175,8 @@ class _MainPersuratanScreenState extends State<MainPersuratanScreen> {
             children: [
               Text(
                 _currentTitle,
-                style: const TextStyle(fontSize: 16.5, fontWeight: FontWeight.bold),
+                style:
+                    const TextStyle(fontSize: 16.5, fontWeight: FontWeight.bold),
               ),
               const Text(
                 'Kampung Argomulyo – Way Kanan',
@@ -244,7 +270,8 @@ class _MainPersuratanScreenState extends State<MainPersuratanScreen> {
                           BoxShadow(color: Colors.black26, blurRadius: 6),
                         ],
                       ),
-                      child: Image.asset('assets/logo.png', width: 44, height: 44),
+                      child:
+                          Image.asset('assets/logo.png', width: 44, height: 44),
                     ),
                     const SizedBox(width: 14),
                     const Expanded(
@@ -276,7 +303,8 @@ class _MainPersuratanScreenState extends State<MainPersuratanScreen> {
                 ),
                 const SizedBox(height: 14),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                   decoration: BoxDecoration(
                     color: Colors.white.withOpacity(0.15),
                     borderRadius: BorderRadius.circular(20),
@@ -285,11 +313,15 @@ class _MainPersuratanScreenState extends State<MainPersuratanScreen> {
                   child: const Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(Icons.verified_rounded, color: Color(0xFFFBBF24), size: 14),
+                      Icon(Icons.verified_rounded,
+                          color: Color(0xFFFBBF24), size: 14),
                       SizedBox(width: 6),
                       Text(
                         'Portal Persuratan Resmi Digital',
-                        style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w500),
+                        style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w500),
                       ),
                     ],
                   ),
@@ -309,28 +341,32 @@ class _MainPersuratanScreenState extends State<MainPersuratanScreen> {
                   title: 'Surat Umum',
                   subtitle: 'SKU, SKCK, SKTM, Domisili, dll',
                   isSelected: _currentTitle == 'Surat Umum',
-                  onTap: () => _navigateTo('Surat Umum', _menuUrls['Surat Umum']!),
+                  onTap: () =>
+                      _navigateTo('Surat Umum', _menuUrls['Surat Umum']!),
                 ),
                 _buildDrawerItem(
                   icon: Icons.people_alt_rounded,
                   title: 'Kependudukan & Dukcapil',
                   subtitle: 'Biodata KK, Pindah, Kelahiran',
                   isSelected: _currentTitle == 'Kependudukan & Dukcapil',
-                  onTap: () => _navigateTo('Kependudukan & Dukcapil', _menuUrls['Kependudukan & Dukcapil']!),
+                  onTap: () => _navigateTo('Kependudukan & Dukcapil',
+                      _menuUrls['Kependudukan & Dukcapil']!),
                 ),
                 _buildDrawerItem(
                   icon: Icons.favorite_rounded,
                   title: 'Formulir Nikah (NA)',
                   subtitle: 'Blangko N1 s/d N7 Resmi KUA',
                   isSelected: _currentTitle == 'Formulir Nikah (NA)',
-                  onTap: () => _navigateTo('Formulir Nikah (NA)', _menuUrls['Formulir Nikah (NA)']!),
+                  onTap: () => _navigateTo(
+                      'Formulir Nikah (NA)', _menuUrls['Formulir Nikah (NA)']!),
                 ),
                 _buildDrawerItem(
                   icon: Icons.security_rounded,
                   title: 'Surat Bersih Diri (SKBD)',
                   subtitle: 'Keterangan Bebas Kriminal/TNI/POLRI',
                   isSelected: _currentTitle == 'Surat Bersih Diri (SKBD)',
-                  onTap: () => _navigateTo('Surat Bersih Diri (SKBD)', _menuUrls['Surat Bersih Diri (SKBD)']!),
+                  onTap: () => _navigateTo('Surat Bersih Diri (SKBD)',
+                      _menuUrls['Surat Bersih Diri (SKBD)']!),
                 ),
 
                 const Divider(height: 24, indent: 16, endIndent: 16),
@@ -340,14 +376,29 @@ class _MainPersuratanScreenState extends State<MainPersuratanScreen> {
                   title: 'Verifikasi Dokumen TTE',
                   subtitle: 'Validasi Barcode Keaslian Surat',
                   isSelected: _currentTitle == 'Verifikasi TTE (Scan QR)',
-                  onTap: () => _navigateTo('Verifikasi TTE (Scan QR)', _menuUrls['Verifikasi TTE (Scan QR)']!),
+                  onTap: () => _navigateTo('Verifikasi TTE (Scan QR)',
+                      _menuUrls['Verifikasi TTE (Scan QR)']!),
                 ),
                 _buildDrawerItem(
                   icon: Icons.home_rounded,
                   title: 'Portal Beranda',
                   subtitle: 'Menu Utama Sistem Kampung',
                   isSelected: _currentTitle == 'Portal Beranda',
-                  onTap: () => _navigateTo('Portal Beranda', _menuUrls['Portal Beranda']!),
+                  onTap: () =>
+                      _navigateTo('Portal Beranda', _menuUrls['Portal Beranda']!),
+                ),
+
+                const Divider(height: 24, indent: 16, endIndent: 16),
+                _buildSectionHeader('PEMBARUAN & SISTEM'),
+                _buildDrawerItem(
+                  icon: Icons.system_update_rounded,
+                  title: 'Periksa Pembaruan APK',
+                  subtitle: 'Cek versi terbaru di cloud GitHub',
+                  isSelected: false,
+                  onTap: () {
+                    Navigator.pop(context);
+                    _checkAutoUpdate(showNoUpdateToast: true);
+                  },
                 ),
               ],
             ),
@@ -392,7 +443,9 @@ class _MainPersuratanScreenState extends State<MainPersuratanScreen> {
       leading: Container(
         padding: const EdgeInsets.all(7),
         decoration: BoxDecoration(
-          color: isSelected ? const Color(0xFF0F6B4F) : const Color(0xFFF1F5F9),
+          color: isSelected
+              ? const Color(0xFF0F6B4F)
+              : const Color(0xFFF1F5F9),
           borderRadius: BorderRadius.circular(8),
         ),
         child: Icon(
@@ -406,7 +459,9 @@ class _MainPersuratanScreenState extends State<MainPersuratanScreen> {
         style: TextStyle(
           fontSize: 13.5,
           fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
-          color: isSelected ? const Color(0xFF0F6B4F) : const Color(0xFF1E293B),
+          color: isSelected
+              ? const Color(0xFF0F6B4F)
+              : const Color(0xFF1E293B),
         ),
       ),
       subtitle: Text(
