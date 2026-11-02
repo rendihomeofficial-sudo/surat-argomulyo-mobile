@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:webview_flutter/webview_flutter.dart';
@@ -132,31 +131,48 @@ class _MainPersuratanScreenState extends State<MainPersuratanScreen> {
         ),
       );
 
-    // Aktifkan DOM Storage, Geolocation, & Hardware Acceleration khusus Android
+    // Aktifkan pengaturan native khusus Android
     if (controller.platform is AndroidWebViewController) {
-      AndroidWebViewController.enableDebugging(false);
       final androidController = controller.platform as AndroidWebViewController;
       androidController.setMediaPlaybackRequiresUserGesture(false);
+      androidController.setGeolocationEnabled(true);
     }
 
     _controller = controller;
     _controller.loadRequest(Uri.parse('https://surat.argomulyo.com/surat.html'));
   }
 
-  Future<void> _checkAutoUpdate({bool showNoUpdateToast = false}) async {
-    final info = await UpdateService.checkForUpdate();
-    if (!mounted) return;
-
-    if (info != null && info.hasUpdate) {
-      UpdateDialog.show(context, info);
-    } else if (showNoUpdateToast) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Aplikasi Anda sudah menggunakan versi terbaru.'),
-          backgroundColor: Color(0xFF0F6B4F),
-          behavior: SnackBarBehavior.floating,
-        ),
+  Widget _buildWebViewWidget() {
+    late final PlatformWebViewWidgetCreationParams params;
+    if (WebViewPlatform.instance is AndroidWebViewPlatform) {
+      params = AndroidWebViewWidgetCreationParams(
+        controller: _controller.platform,
+        displayWithHybridComposition: true,
       );
+      return AndroidWebViewWidget(params).build(context);
+    } else {
+      return WebViewWidget(controller: _controller);
+    }
+  }
+
+  Future<void> _checkAutoUpdate({bool showNoUpdateToast = false}) async {
+    try {
+      final info = await UpdateService.checkForUpdate();
+      if (!mounted) return;
+
+      if (info != null && info.hasUpdate) {
+        UpdateDialog.show(context, info);
+      } else if (showNoUpdateToast) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Aplikasi Anda sudah menggunakan versi terbaru.'),
+            backgroundColor: Color(0xFF0F6B4F),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    } catch (e) {
+      debugPrint('AutoUpdate Error: $e');
     }
   }
 
@@ -251,8 +267,8 @@ class _MainPersuratanScreenState extends State<MainPersuratanScreen> {
           color: Colors.white,
           child: Stack(
             children: [
-              // WebView Area
-              WebViewWidget(controller: _controller),
+              // WebView Area dengan Hybrid Composition
+              _buildWebViewWidget(),
 
               // Jika ada galat jaringan / koneksi putus
               if (_errorMessage != null)
@@ -398,10 +414,10 @@ class _MainPersuratanScreenState extends State<MainPersuratanScreen> {
                 Container(
                   padding:
                       const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.15),
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: Colors.white24),
+                  decoration: const BoxDecoration(
+                    color: Color(0x26FFFFFF),
+                    borderRadius: BorderRadius.all(Radius.circular(20)),
+                    border: Border.fromBorderSide(BorderSide(color: Colors.white24)),
                   ),
                   child: const Row(
                     mainAxisSize: MainAxisSize.min,
@@ -501,7 +517,7 @@ class _MainPersuratanScreenState extends State<MainPersuratanScreen> {
           Container(
             padding: const EdgeInsets.symmetric(vertical: 12),
             child: const Text(
-              'Versi 1.0.1 Resmi • Kampung Argomulyo',
+              'Versi 1.0.2 Resmi • Kampung Argomulyo',
               style: TextStyle(fontSize: 11, color: Color(0xFF94A3B8)),
             ),
           ),

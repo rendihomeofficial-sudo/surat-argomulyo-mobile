@@ -50,19 +50,19 @@ jobs:
         if: github.ref == 'refs/heads/main'
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v1.0.1
-          name: "Surat Argomulyo Mobile v1.0.1 Resmi (Perbaikan Layar)"
+          tag_name: v1.0.2
+          name: "Surat Argomulyo Mobile v1.0.2 Resmi (Texture Mode & Hybrid Composition)"
           body: |
-            ### 📱 Aplikasi Resmi Persuratan & Administrasi Desa Kampung Argomulyo v1.0.1
-            - **Perbaikan Krusial:** 
-              - Mengatasi tampilan blank hitam saat instalasi di HP Android.
-              - Inisialisasi Android WebView Platform asli dengan User-Agent resmi.
-              - Penambahan tema responsif terang (`values-night/styles.xml`) agar tidak terpengaruh Dark Mode OS.
-              - Penanganan galat koneksi internet ramah pengguna.
+            ### 📱 Aplikasi Resmi Persuratan & Administrasi Desa Kampung Argomulyo v1.0.2
+            - **Perbaikan Tuntas Masalah Layar Hitam (Black Screen):**
+              1. **Texture Render Mode:** Mengalihkan render mode engine Flutter native (`MainActivity.kt`) dari `RenderMode.surface` ke `RenderMode.texture`, menghilangkan bug *black canvas freeze* pada GPU perangkat Android.
+              2. **Hybrid Composition:** Mengaktifkan `displayWithHybridComposition: true` pada widget WebView Android untuk integrasi visual langsung dengan antarmuka native OS.
+              3. **Splash Screen Bersih:** Memperbarui `launch_background.xml` (dan `drawable-v21`) menggunakan layer solid background putih murni tanpa bitmap layer conflict.
             - **Fitur Utama:**
-              - Fitur Auto-Update OTA otomatis tanpa galat izin.
-              - Menu Sidebar Lengkap: Surat Umum, Dukcapil, NA Nikah, SKBD, Validasi TTE.
-            - **Unduh Langsung:** Silakan unduh berkas **`app-release.apk`** di bawah ini.
+              - Layar loading elegan berlogo resmi desa.
+              - Menu sidebar interaktif lengkap 6 kategori.
+              - In-app Auto-Update cerdas dari GitHub Release.
+            - **Unduh APK:** Klik dan unduh file **`app-release.apk`** di bawah.
           files: |
             build/app/outputs/flutter-apk/app-release.apk
           prerelease: false
