@@ -1,4 +1,4 @@
-name: Build Android APK (Flutter)
+name: Build Android APK (Flutter) & Create GitHub Release
 
 on:
   push:
@@ -7,9 +7,12 @@ on:
     branches: [ main, master ]
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   build:
-    name: Build Release APK
+    name: Build & Release APK
     runs-on: ubuntu-latest
 
     steps:
@@ -36,9 +39,33 @@ jobs:
       - name: Build APK Release
         run: flutter build apk --release
 
-      - name: Upload Release APK
+      - name: Upload Release Artifact
         uses: actions/upload-artifact@v4
         with:
           name: Surat-Argomulyo-Release-APK
           path: build/app/outputs/flutter-apk/app-release.apk
           retention-days: 30
+
+      - name: Create or Update GitHub Release
+        if: github.ref == 'refs/heads/main'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v1.0.0
+          name: "Surat Argomulyo Mobile v1.0.0 Resmi"
+          body: |
+            ### 📱 Aplikasi Resmi Persuratan & Administrasi Desa Kampung Argomulyo
+            - **Paket:** `com.argomulyo.surat`
+            - **Fitur:** 
+              - Sidebar Navigation Drawer Material 3
+              - Integrasi 22 Jenis Surat Umum (SKU, SKCK, Domisili, dll.)
+              - Layanan Kependudukan & Dukcapil
+              - Formulir Nikah (NA N1 - N7)
+              - Surat Keterangan Bersih Diri (SKBD)
+              - Pemindai & Verifikasi Dokumen TTE BSrE
+            - **Unduh Langsung:** Silakan unduh berkas **`Surat-Argomulyo-v1.0.0.apk`** di bawah ini untuk dipasang di HP Android.
+          files: |
+            build/app/outputs/flutter-apk/app-release.apk
+          prerelease: false
+          draft: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
