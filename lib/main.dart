@@ -1,6 +1,8 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:webview_flutter/webview_flutter.dart';
+import 'package:webview_flutter_android/webview_flutter_android.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'update_service.dart';
 
@@ -25,6 +27,7 @@ class SuratArgomulyoApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         useMaterial3: true,
+        scaffoldBackgroundColor: const Color(0xFFF4F6F5),
         colorScheme: ColorScheme.fromSeed(
           seedColor: const Color(0xFF0F6B4F),
           primary: const Color(0xFF0F6B4F),
@@ -52,6 +55,7 @@ class _MainPersuratanScreenState extends State<MainPersuratanScreen> {
   late final WebViewController _controller;
   bool _isLoading = true;
   int _loadingProgress = 0;
+  String? _errorMessage;
   String _currentTitle = 'Surat Umum';
 
   // Daftar Menu Layanan
@@ -67,37 +71,76 @@ class _MainPersuratanScreenState extends State<MainPersuratanScreen> {
   @override
   void initState() {
     super.initState();
-    _controller = WebViewController()
-      ..setJavaScriptMode(JavaScriptMode.unrestricted)
-      ..setBackgroundColor(const Color(0xFFF4F6F5))
-      ..setNavigationDelegate(
-        NavigationDelegate(
-          onProgress: (int progress) {
-            setState(() {
-              _loadingProgress = progress;
-            });
-          },
-          onPageStarted: (String url) {
-            setState(() {
-              _isLoading = true;
-            });
-          },
-          onPageFinished: (String url) {
-            setState(() {
-              _isLoading = false;
-            });
-          },
-          onWebResourceError: (WebResourceError error) {
-            debugPrint('WebResourceError: ${error.description}');
-          },
-        ),
-      )
-      ..loadRequest(Uri.parse('https://surat.argomulyo.com/surat.html'));
+    _initWebViewController();
 
     // Otomatis periksa pembaruan versi APK di background setelah aplikasi terbuka
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _checkAutoUpdate();
     });
+  }
+
+  void _initWebViewController() {
+    late final PlatformWebViewControllerCreationParams params;
+    if (WebViewPlatform.instance is AndroidWebViewPlatform) {
+      params = AndroidWebViewControllerCreationParams();
+    } else {
+      params = const PlatformWebViewControllerCreationParams();
+    }
+
+    final WebViewController controller =
+        WebViewController.fromPlatformCreationParams(params);
+
+    controller
+      ..setJavaScriptMode(JavaScriptMode.unrestricted)
+      ..setBackgroundColor(Colors.white)
+      ..setUserAgent(
+        'Mozilla/5.0 (Linux; Android 10; Mobile) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36 SuratArgomulyoApp/1.0',
+      )
+      ..setNavigationDelegate(
+        NavigationDelegate(
+          onProgress: (int progress) {
+            if (mounted) {
+              setState(() {
+                _loadingProgress = progress;
+              });
+            }
+          },
+          onPageStarted: (String url) {
+            if (mounted) {
+              setState(() {
+                _isLoading = true;
+                _errorMessage = null;
+              });
+            }
+          },
+          onPageFinished: (String url) {
+            if (mounted) {
+              setState(() {
+                _isLoading = false;
+              });
+            }
+          },
+          onWebResourceError: (WebResourceError error) {
+            debugPrint('WebResourceError: ${error.description}');
+            if (mounted && error.isForMainFrame == true) {
+              setState(() {
+                _isLoading = false;
+                _errorMessage = error.description;
+              });
+            }
+          },
+        ),
+      );
+
+    // Aktifkan DOM Storage, Geolocation, & Hardware Acceleration khusus Android
+    if (controller.platform is AndroidWebViewController) {
+      AndroidWebViewController.enableDebugging(false);
+      final androidController = controller.platform as AndroidWebViewController;
+      androidController.setMediaPlaybackRequiresUserGesture(false);
+    }
+
+    _controller = controller;
+    _controller.loadRequest(Uri.parse('https://surat.argomulyo.com/surat.html'));
   }
 
   Future<void> _checkAutoUpdate({bool showNoUpdateToast = false}) async {
@@ -121,6 +164,7 @@ class _MainPersuratanScreenState extends State<MainPersuratanScreen> {
     setState(() {
       _currentTitle = title;
       _isLoading = true;
+      _errorMessage = null;
     });
     Navigator.pop(context); // Tutup drawer sidebar
     _controller.loadRequest(Uri.parse(url));
@@ -195,7 +239,7 @@ class _MainPersuratanScreenState extends State<MainPersuratanScreen> {
               ? PreferredSize(
                   preferredSize: const Size.fromHeight(3.0),
                   child: LinearProgressIndicator(
-                    value: _loadingProgress / 100.0,
+                    value: _loadingProgress > 0 ? _loadingProgress / 100.0 : null,
                     backgroundColor: const Color(0xFF0B5640),
                     valueColor: const ColorAnimation(Color(0xFFFBBF24)),
                   ),
@@ -203,36 +247,85 @@ class _MainPersuratanScreenState extends State<MainPersuratanScreen> {
               : null,
         ),
         drawer: _buildSidebarDrawer(),
-        body: Stack(
-          children: [
-            WebViewWidget(controller: _controller),
-            if (_isLoading && _loadingProgress < 60)
-              Container(
-                color: Colors.white.withOpacity(0.9),
-                child: Center(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Image.asset('assets/logo.png', width: 68, height: 68),
-                      const SizedBox(height: 18),
-                      const SpinKitThreeBounce(
-                        color: Color(0xFF0F6B4F),
-                        size: 28.0,
-                      ),
-                      const SizedBox(height: 12),
-                      const Text(
-                        'Memuat Layanan Surat...',
-                        style: TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
-                          color: Color(0xFF0F6B4F),
+        body: Container(
+          color: Colors.white,
+          child: Stack(
+            children: [
+              // WebView Area
+              WebViewWidget(controller: _controller),
+
+              // Jika ada galat jaringan / koneksi putus
+              if (_errorMessage != null)
+                Container(
+                  color: Colors.white,
+                  padding: const EdgeInsets.all(24),
+                  child: Center(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(
+                          Icons.wifi_off_rounded,
+                          size: 56,
+                          color: Color(0xFFDC2626),
                         ),
-                      ),
-                    ],
+                        const SizedBox(height: 16),
+                        const Text(
+                          'Koneksi Internet Terganggu',
+                          style: TextStyle(
+                            fontSize: 17,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF1E293B),
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'Gagal memuat halaman: $_errorMessage\nPastikan HP Anda terhubung dengan internet.',
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(fontSize: 13, color: Color(0xFF64748B)),
+                        ),
+                        const SizedBox(height: 20),
+                        FilledButton.icon(
+                          style: FilledButton.styleFrom(
+                            backgroundColor: const Color(0xFF0F6B4F),
+                          ),
+                          onPressed: () => _controller.reload(),
+                          icon: const Icon(Icons.refresh_rounded),
+                          label: const Text('Coba Muat Ulang'),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
-              ),
-          ],
+
+              // Layar Loading Bersih
+              if (_isLoading && _loadingProgress < 65)
+                Container(
+                  color: Colors.white,
+                  child: Center(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Image.asset('assets/logo.png', width: 68, height: 68),
+                        const SizedBox(height: 18),
+                        const SpinKitThreeBounce(
+                          color: Color(0xFF0F6B4F),
+                          size: 28.0,
+                        ),
+                        const SizedBox(height: 12),
+                        const Text(
+                          'Memuat Layanan Surat...',
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                            color: Color(0xFF0F6B4F),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+            ],
+          ),
         ),
       ),
     );
@@ -408,7 +501,7 @@ class _MainPersuratanScreenState extends State<MainPersuratanScreen> {
           Container(
             padding: const EdgeInsets.symmetric(vertical: 12),
             child: const Text(
-              'Versi 1.0.0 Resmi • Kampung Argomulyo',
+              'Versi 1.0.1 Resmi • Kampung Argomulyo',
               style: TextStyle(fontSize: 11, color: Color(0xFF94A3B8)),
             ),
           ),

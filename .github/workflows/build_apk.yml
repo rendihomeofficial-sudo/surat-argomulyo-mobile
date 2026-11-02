@@ -50,19 +50,19 @@ jobs:
         if: github.ref == 'refs/heads/main'
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v1.0.0
-          name: "Surat Argomulyo Mobile v1.0.0 Resmi"
+          tag_name: v1.0.1
+          name: "Surat Argomulyo Mobile v1.0.1 Resmi (Perbaikan Layar)"
           body: |
-            ### 📱 Aplikasi Resmi Persuratan & Administrasi Desa Kampung Argomulyo
-            - **Paket:** `com.argomulyo.surat`
-            - **Fitur:** 
-              - Sidebar Navigation Drawer Material 3
-              - Integrasi 22 Jenis Surat Umum (SKU, SKCK, Domisili, dll.)
-              - Layanan Kependudukan & Dukcapil
-              - Formulir Nikah (NA N1 - N7)
-              - Surat Keterangan Bersih Diri (SKBD)
-              - Pemindai & Verifikasi Dokumen TTE BSrE
-            - **Unduh Langsung:** Silakan unduh berkas **`Surat-Argomulyo-v1.0.0.apk`** di bawah ini untuk dipasang di HP Android.
+            ### 📱 Aplikasi Resmi Persuratan & Administrasi Desa Kampung Argomulyo v1.0.1
+            - **Perbaikan Krusial:** 
+              - Mengatasi tampilan blank hitam saat instalasi di HP Android.
+              - Inisialisasi Android WebView Platform asli dengan User-Agent resmi.
+              - Penambahan tema responsif terang (`values-night/styles.xml`) agar tidak terpengaruh Dark Mode OS.
+              - Penanganan galat koneksi internet ramah pengguna.
+            - **Fitur Utama:**
+              - Fitur Auto-Update OTA otomatis tanpa galat izin.
+              - Menu Sidebar Lengkap: Surat Umum, Dukcapil, NA Nikah, SKBD, Validasi TTE.
+            - **Unduh Langsung:** Silakan unduh berkas **`app-release.apk`** di bawah ini.
           files: |
             build/app/outputs/flutter-apk/app-release.apk
           prerelease: false
