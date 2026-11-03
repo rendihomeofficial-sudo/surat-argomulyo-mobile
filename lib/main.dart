@@ -143,16 +143,21 @@ class _MainPersuratanScreenState extends State<MainPersuratanScreen> {
   }
 
   Widget _buildWebViewWidget() {
-    late final PlatformWebViewWidgetCreationParams params;
+    PlatformWebViewWidgetCreationParams params =
+        PlatformWebViewWidgetCreationParams(
+      controller: _controller.platform,
+      layoutDirection: TextDirection.ltr,
+    );
     if (WebViewPlatform.instance is AndroidWebViewPlatform) {
-      params = AndroidWebViewWidgetCreationParams(
-        controller: _controller.platform,
+      params = AndroidWebViewWidgetCreationParams
+          .fromPlatformWebViewWidgetCreationParams(
+        params,
         displayWithHybridComposition: true,
       );
-      return AndroidWebViewWidget(params).build(context);
-    } else {
-      return WebViewWidget(controller: _controller);
     }
+    return WebViewWidget.fromPlatformCreationParams(
+      params: params,
+    );
   }
 
   Future<void> _checkAutoUpdate({bool showNoUpdateToast = false}) async {

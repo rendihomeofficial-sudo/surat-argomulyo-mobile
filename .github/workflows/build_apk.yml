@@ -50,10 +50,10 @@ jobs:
         if: github.ref == 'refs/heads/main'
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v1.0.2
-          name: "Surat Argomulyo Mobile v1.0.2 Resmi (Texture Mode & Hybrid Composition)"
+          tag_name: v1.0.3
+          name: "Surat Argomulyo Mobile v1.0.3 Resmi (Perbaikan Layar Hitam & Riwayat Surat)"
           body: |
-            ### 📱 Aplikasi Resmi Persuratan & Administrasi Desa Kampung Argomulyo v1.0.2
+            ### 📱 Aplikasi Resmi Persuratan & Administrasi Desa Kampung Argomulyo v1.0.3
             - **Perbaikan Tuntas Masalah Layar Hitam (Black Screen):**
               1. **Texture Render Mode:** Mengalihkan render mode engine Flutter native (`MainActivity.kt`) dari `RenderMode.surface` ke `RenderMode.texture`, menghilangkan bug *black canvas freeze* pada GPU perangkat Android.
               2. **Hybrid Composition:** Mengaktifkan `displayWithHybridComposition: true` pada widget WebView Android untuk integrasi visual langsung dengan antarmuka native OS.
