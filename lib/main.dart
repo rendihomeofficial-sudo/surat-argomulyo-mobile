@@ -1,8 +1,12 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import 'package:webview_flutter_android/webview_flutter_android.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
+import 'package:dio/dio.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:open_filex/open_filex.dart';
 import 'update_service.dart';
 
 void main() {
@@ -117,6 +121,7 @@ class _MainPersuratanScreenState extends State<MainPersuratanScreen> {
             if (mounted) {
               setState(() {
                 _isLoading = false;
+                _updateTitleFromUrl(url);
               });
             }
           },
@@ -128,6 +133,18 @@ class _MainPersuratanScreenState extends State<MainPersuratanScreen> {
                 _errorMessage = error.description;
               });
             }
+          },
+          onNavigationRequest: (NavigationRequest request) {
+            final url = request.url.toLowerCase();
+            // Tangkap berkas ekspor data (CSV / JSON) agar diunduh langsung & dibuka oleh aplikasi Office/Excel HP
+            if (url.contains('action=export_agenda_csv') ||
+                url.contains('action=export_buku_tamu_csv') ||
+                url.endsWith('.csv') ||
+                url.endsWith('.json')) {
+              _downloadAndOpenExportFile(request.url);
+              return NavigationDecision.prevent;
+            }
+            return NavigationDecision.navigate;
           },
         ),
       );
@@ -179,6 +196,115 @@ class _MainPersuratanScreenState extends State<MainPersuratanScreen> {
       }
     } catch (e) {
       debugPrint('AutoUpdate Error: $e');
+    }
+  }
+
+  void _updateTitleFromUrl(String url) {
+    final lower = url.toLowerCase();
+    String detectedTitle = _currentTitle;
+
+    if (lower.contains('kependudukan.html')) {
+      detectedTitle = 'Kependudukan & Dukcapil';
+    } else if (lower.contains('ktp.html')) {
+      detectedTitle = 'Permohonan KTP';
+    } else if (lower.contains('f101_biodata_kk.html')) {
+      detectedTitle = 'F-1.01 Biodata KK';
+    } else if (lower.contains('f103_pindah.html')) {
+      detectedTitle = 'F-1.03 Pindah Penduduk';
+    } else if (lower.contains('f205_kelahiran.html')) {
+      detectedTitle = 'F-2.05 Kelahiran';
+    } else if (lower.contains('f106_ubah_biodata.html')) {
+      detectedTitle = 'F-1.06 Ubah Biodata';
+    } else if (lower.contains('f228_kematian.html')) {
+      detectedTitle = 'F-2.28 Kematian';
+    } else if (lower.contains('na_pernikahan.html')) {
+      detectedTitle = 'Formulir Nikah (NA)';
+    } else if (lower.contains('skbd.html')) {
+      detectedTitle = 'Surat Bersih Diri (SKBD)';
+    } else if (lower.contains('buku_tamu.html')) {
+      detectedTitle = 'Buku Tamu Pelayanan';
+    } else if (lower.contains('validasi.php')) {
+      detectedTitle = 'Verifikasi Dokumen TTE';
+    } else if (lower.contains('index.html')) {
+      detectedTitle = 'Portal Beranda';
+    } else if (lower.contains('surat.html')) {
+      detectedTitle = 'Surat Umum';
+    }
+
+    if (detectedTitle != _currentTitle) {
+      setState(() {
+        _currentTitle = detectedTitle;
+      });
+    }
+  }
+
+  /// Menangani download file CSV rekap agenda / buku tamu di WebView
+  Future<void> _downloadAndOpenExportFile(String downloadUrl) async {
+    try {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Row(
+            children: [
+              SizedBox(
+                width: 18,
+                height: 18,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                ),
+              ),
+              SizedBox(width: 12),
+              Text('Sedang mengunduh berkas laporan...'),
+            ],
+          ),
+          backgroundColor: Color(0xFF0F6B4F),
+          duration: Duration(seconds: 2),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+
+      final dir = await getExternalStorageDirectory() ??
+          await getTemporaryDirectory();
+
+      String filename = 'LAPORAN_ARGOMULYO_${DateTime.now().millisecondsSinceEpoch}.csv';
+      if (downloadUrl.contains('buku_tamu')) {
+        filename = 'BUKU_TAMU_ARGOMULYO_${DateTime.now().millisecondsSinceEpoch}.csv';
+      } else if (downloadUrl.contains('json')) {
+        filename = 'BACKUP_ARGOMULYO_${DateTime.now().millisecondsSinceEpoch}.json';
+      }
+
+      final savePath = '${dir.path}/$filename';
+      final dio = Dio();
+      await dio.download(downloadUrl, savePath);
+
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Berkas berhasil diunduh: $filename'),
+          backgroundColor: const Color(0xFF0F6B4F),
+          action: SnackBarAction(
+            label: 'Buka',
+            textColor: const Color(0xFFFBBF24),
+            onPressed: () {
+              OpenFilex.open(savePath);
+            },
+          ),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+
+      // Otomatis buka file dengan aplikasi Excel / Text Viewer HP
+      await OpenFilex.open(savePath);
+    } catch (e) {
+      debugPrint('Export file download error: $e');
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Gagal mengunduh berkas laporan: $e'),
+          backgroundColor: const Color(0xFFDC2626),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
     }
   }
 

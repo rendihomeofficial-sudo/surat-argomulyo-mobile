@@ -50,14 +50,14 @@ jobs:
         if: github.ref == 'refs/heads/main'
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v1.0.4
-          name: "Surat Argomulyo Mobile v1.0.4 Resmi (Perbaikan Tata Letak Mobile & Buku Tamu)"
+          tag_name: v1.0.5
+          name: "Surat Argomulyo Mobile v1.0.5 Resmi (Audit Menyeluruh & Ekspor CSV)"
           body: |
-            ### 📱 Aplikasi Resmi Persuratan & Administrasi Desa Kampung Argomulyo v1.0.4
-            - **Perbaikan Menyeluruh Tampilan & Tata Letak Mobile:**
-              1. **Perbaikan Panel Sticky Kependudukan:** Mengatasi bug lembar pratinjau bertumpuk/terpotong di layar HP (`ktp.html`, `f205_kelahiran.html`, `f106_ubah_biodata.html`, `f228_kematian.html`).
-              2. **Auto-fit Preview A3 & F4:** Pratinjau formulir F-1.01 Biodata KK A3 dan formulir kependudukan kini otomatis menyesuaikan lebar layar smartphone secara presisi.
-              3. **Integrasi Menu Sidebar Buku Tamu:** Menambahkan menu langsung Buku Tamu Pelayanan Balai Kampung di sidebar drawer navigasi aplikasi.
+            ### 📱 Aplikasi Resmi Persuratan & Administrasi Desa Kampung Argomulyo v1.0.5
+            - **Pembaruan & Penyempurnaan Menyeluruh (Audit Release):**
+              1. **Sinkronisasi Judul AppBar Otomatis:** Judul aplikasi di bagian atas otomatis berganti mengikuti halaman yang sedang dibuka oleh pengguna (Kependudukan, SKBD, NA Nikah, Buku Tamu, dll).
+              2. **Download & Ekspor Berkas Laporan:** Integrasi penanganan otomatis unduh berkas CSV Agenda Surat & Buku Tamu yang langsung dibuka melalui aplikasi spreadsheet/Office di smartphone.
+              3. **Optimalisasi Tata Letak Formulir Mobile:** Penyesuaian responsif mobile pada menu navigasi portal horizontal dan seluruh panel kependudukan (`f103_pindah.html`, `f101_biodata_kk.html`, dll).
             - **Fitur Utama:**
               - Layar loading elegan berlogo resmi desa.
               - Menu sidebar interaktif lengkap 7 kategori layanan desa.
