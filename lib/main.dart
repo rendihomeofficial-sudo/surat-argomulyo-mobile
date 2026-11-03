@@ -63,6 +63,7 @@ class _MainPersuratanScreenState extends State<MainPersuratanScreen> {
     'Kependudukan & Dukcapil': 'https://surat.argomulyo.com/kependudukan.html',
     'Formulir Nikah (NA)': 'https://surat.argomulyo.com/na_pernikahan.html',
     'Surat Bersih Diri (SKBD)': 'https://surat.argomulyo.com/skbd.html',
+    'Buku Tamu Pelayanan': 'https://surat.argomulyo.com/buku_tamu.html',
     'Portal Beranda': 'https://surat.argomulyo.com/index.html',
     'Verifikasi TTE (Scan QR)': 'https://surat.argomulyo.com/validasi.php',
   };
@@ -482,6 +483,14 @@ class _MainPersuratanScreenState extends State<MainPersuratanScreen> {
                   onTap: () => _navigateTo('Surat Bersih Diri (SKBD)',
                       _menuUrls['Surat Bersih Diri (SKBD)']!),
                 ),
+                _buildDrawerItem(
+                  icon: Icons.menu_book_rounded,
+                  title: 'Buku Tamu Pelayanan',
+                  subtitle: 'Catat Tamu & Tanda Tangan Digital',
+                  isSelected: _currentTitle == 'Buku Tamu Pelayanan',
+                  onTap: () => _navigateTo('Buku Tamu Pelayanan',
+                      _menuUrls['Buku Tamu Pelayanan']!),
+                ),
 
                 const Divider(height: 24, indent: 16, endIndent: 16),
                 _buildSectionHeader('VERIFIKASI & PORTAL'),
@@ -522,7 +531,7 @@ class _MainPersuratanScreenState extends State<MainPersuratanScreen> {
           Container(
             padding: const EdgeInsets.symmetric(vertical: 12),
             child: const Text(
-              'Versi 1.0.2 Resmi • Kampung Argomulyo',
+              'Versi 1.0.4 Resmi • Kampung Argomulyo',
               style: TextStyle(fontSize: 11, color: Color(0xFF94A3B8)),
             ),
           ),
