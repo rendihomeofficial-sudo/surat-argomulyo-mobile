@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import 'package:webview_flutter_android/webview_flutter_android.dart';
-import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:dio/dio.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:open_filex/open_filex.dart';
@@ -30,7 +29,7 @@ class SuratArgomulyoApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         useMaterial3: true,
-        scaffoldBackgroundColor: const Color(0xFFF4F6F5),
+        scaffoldBackgroundColor: Colors.white,
         colorScheme: ColorScheme.fromSeed(
           seedColor: const Color(0xFF0F6B4F),
           primary: const Color(0xFF0F6B4F),
@@ -39,7 +38,7 @@ class SuratArgomulyoApp extends StatelessWidget {
         appBarTheme: const AppBarTheme(
           backgroundColor: Color(0xFF0F6B4F),
           foregroundColor: Colors.white,
-          elevation: 2,
+          elevation: 1,
         ),
       ),
       home: const MainPersuratanScreen(),
@@ -61,7 +60,6 @@ class _MainPersuratanScreenState extends State<MainPersuratanScreen> {
   String? _errorMessage;
   String _currentTitle = 'Surat Umum';
 
-  // Daftar Menu Layanan
   final Map<String, String> _menuUrls = {
     'Surat Umum': 'https://surat.argomulyo.com/surat.html',
     'Kependudukan & Dukcapil': 'https://surat.argomulyo.com/kependudukan.html',
@@ -106,6 +104,9 @@ class _MainPersuratanScreenState extends State<MainPersuratanScreen> {
             if (mounted) {
               setState(() {
                 _loadingProgress = progress;
+                if (progress >= 80) {
+                  _isLoading = false;
+                }
               });
             }
           },
@@ -113,6 +114,7 @@ class _MainPersuratanScreenState extends State<MainPersuratanScreen> {
             if (mounted) {
               setState(() {
                 _isLoading = true;
+                _loadingProgress = 0;
                 _errorMessage = null;
               });
             }
@@ -149,11 +151,13 @@ class _MainPersuratanScreenState extends State<MainPersuratanScreen> {
         ),
       );
 
-    // Aktifkan pengaturan native khusus Android
+    // Aktifkan pengaturan native Android yang optimal & bebas glitch
     if (controller.platform is AndroidWebViewController) {
       final androidController = controller.platform as AndroidWebViewController;
       androidController.setMediaPlaybackRequiresUserGesture(false);
       androidController.setGeolocationEnabled(true);
+      androidController.setMixedContentMode(MixedContentMode.alwaysAllow);
+      androidController.setOverScrollMode(WebViewOverScrollMode.never);
     }
 
     _controller = controller;
@@ -166,11 +170,12 @@ class _MainPersuratanScreenState extends State<MainPersuratanScreen> {
       controller: _controller.platform,
       layoutDirection: TextDirection.ltr,
     );
+    // Matikan expensive Hybrid Composition agar rendering berjalan native dan tidak glitch/kedip
     if (WebViewPlatform.instance is AndroidWebViewPlatform) {
       params = AndroidWebViewWidgetCreationParams
           .fromPlatformWebViewWidgetCreationParams(
         params,
-        displayWithHybridComposition: true,
+        displayWithHybridComposition: false,
       );
     }
     return WebViewWidget.fromPlatformCreationParams(
@@ -238,7 +243,6 @@ class _MainPersuratanScreenState extends State<MainPersuratanScreen> {
     }
   }
 
-  /// Menangani download file CSV rekap agenda / buku tamu di WebView
   Future<void> _downloadAndOpenExportFile(String downloadUrl) async {
     try {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -312,6 +316,7 @@ class _MainPersuratanScreenState extends State<MainPersuratanScreen> {
     setState(() {
       _currentTitle = title;
       _isLoading = true;
+      _loadingProgress = 0;
       _errorMessage = null;
     });
     Navigator.pop(context); // Tutup drawer sidebar
@@ -385,11 +390,11 @@ class _MainPersuratanScreenState extends State<MainPersuratanScreen> {
           ],
           bottom: _isLoading
               ? PreferredSize(
-                  preferredSize: const Size.fromHeight(3.0),
+                  preferredSize: const Size.fromHeight(2.5),
                   child: LinearProgressIndicator(
                     value: _loadingProgress > 0 ? _loadingProgress / 100.0 : null,
                     backgroundColor: const Color(0xFF0B5640),
-                    valueColor: const ColorAnimation(Color(0xFFFBBF24)),
+                    valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFFFBBF24)),
                   ),
                 )
               : null,
@@ -399,7 +404,7 @@ class _MainPersuratanScreenState extends State<MainPersuratanScreen> {
           color: Colors.white,
           child: Stack(
             children: [
-              // WebView Area dengan Hybrid Composition
+              // WebView Area Utama
               _buildWebViewWidget(),
 
               // Jika ada galat jaringan / koneksi putus
@@ -445,27 +450,42 @@ class _MainPersuratanScreenState extends State<MainPersuratanScreen> {
                   ),
                 ),
 
-              // Layar Loading Bersih
-              if (_isLoading && _loadingProgress < 65)
-                Container(
-                  color: Colors.white,
-                  child: Center(
-                    child: Column(
+              // Indikator Loading Tipis Non-Blocking agar tidak menutupi layar menjadi blank/hitam
+              if (_isLoading && _loadingProgress < 40)
+                Align(
+                  alignment: Alignment.topCenter,
+                  child: Container(
+                    margin: const EdgeInsets.only(top: 14),
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF0F6B4F).withOpacity(0.92),
+                      borderRadius: BorderRadius.circular(20),
+                      boxShadow: const [
+                        BoxShadow(
+                          color: Colors.black26,
+                          blurRadius: 8,
+                          offset: Offset(0, 2),
+                        )
+                      ],
+                    ),
+                    child: const Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Image.asset('assets/logo.png', width: 68, height: 68),
-                        const SizedBox(height: 18),
-                        const SpinKitThreeBounce(
-                          color: Color(0xFF0F6B4F),
-                          size: 28.0,
+                        SizedBox(
+                          width: 14,
+                          height: 14,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                          ),
                         ),
-                        const SizedBox(height: 12),
-                        const Text(
-                          'Memuat Layanan Surat...',
+                        SizedBox(width: 8),
+                        Text(
+                          'Memuat data...',
                           style: TextStyle(
-                            fontSize: 13,
+                            fontSize: 12,
                             fontWeight: FontWeight.w600,
-                            color: Color(0xFF0F6B4F),
+                            color: Colors.white,
                           ),
                         ),
                       ],
@@ -503,38 +523,52 @@ class _MainPersuratanScreenState extends State<MainPersuratanScreen> {
                 Row(
                   children: [
                     Container(
-                      padding: const EdgeInsets.all(4),
+                      padding: const EdgeInsets.all(3),
                       decoration: BoxDecoration(
                         color: Colors.white,
                         borderRadius: BorderRadius.circular(10),
                         boxShadow: const [
-                          BoxShadow(color: Colors.black26, blurRadius: 6),
+                          BoxShadow(
+                            color: Colors.black26,
+                            blurRadius: 4,
+                            offset: Offset(0, 2),
+                          )
                         ],
                       ),
-                      child:
-                          Image.asset('assets/logo.png', width: 44, height: 44),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(7),
+                        child:
+                            Image.asset('assets/logo.png', width: 44, height: 44),
+                      ),
                     ),
-                    const SizedBox(width: 14),
+                    const SizedBox(width: 12),
                     const Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
+                            'Pemerintah Desa',
+                            style: TextStyle(
+                              color: Color(0xFFD1FAE5),
+                              fontSize: 11,
+                              fontWeight: FontWeight.w500,
+                              letterSpacing: 0.5,
+                            ),
+                          ),
+                          Text(
                             'KAMPUNG ARGOMULYO',
                             style: TextStyle(
                               color: Colors.white,
+                              fontSize: 15,
                               fontWeight: FontWeight.bold,
-                              fontSize: 14.5,
                               letterSpacing: 0.3,
                             ),
                           ),
-                          SizedBox(height: 2),
                           Text(
-                            'Kecamatan Banjit\nKabupaten Way Kanan',
+                            'Kec. Banjit, Way Kanan',
                             style: TextStyle(
-                              color: Color(0xFFE2E8F0),
-                              fontSize: 11.5,
-                              height: 1.2,
+                              color: Color(0xFFD1FAE5),
+                              fontSize: 11,
                             ),
                           ),
                         ],
@@ -629,36 +663,37 @@ class _MainPersuratanScreenState extends State<MainPersuratanScreen> {
                       _menuUrls['Verifikasi TTE (Scan QR)']!),
                 ),
                 _buildDrawerItem(
-                  icon: Icons.home_rounded,
-                  title: 'Portal Beranda',
-                  subtitle: 'Menu Utama Sistem Kampung',
+                  icon: Icons.public_rounded,
+                  title: 'Portal Beranda Desa',
+                  subtitle: 'Menu Lengkap Layanan Administrasi',
                   isSelected: _currentTitle == 'Portal Beranda',
-                  onTap: () =>
-                      _navigateTo('Portal Beranda', _menuUrls['Portal Beranda']!),
+                  onTap: () => _navigateTo(
+                      'Portal Beranda', _menuUrls['Portal Beranda']!),
                 ),
 
                 const Divider(height: 24, indent: 16, endIndent: 16),
-                _buildSectionHeader('PEMBARUAN & SISTEM'),
+                _buildSectionHeader('SISTEM & INFORMASI'),
                 _buildDrawerItem(
                   icon: Icons.system_update_rounded,
                   title: 'Periksa Pembaruan APK',
-                  subtitle: 'Cek versi terbaru di cloud GitHub',
+                  subtitle: 'Versi v1.0.7 (Rilis Resmi)',
                   isSelected: false,
                   onTap: () {
                     Navigator.pop(context);
                     _checkAutoUpdate(showNoUpdateToast: true);
                   },
                 ),
+                _buildDrawerItem(
+                  icon: Icons.info_outline_rounded,
+                  title: 'Tentang Aplikasi',
+                  subtitle: 'Pemerintah Kampung Argomulyo',
+                  isSelected: false,
+                  onTap: () {
+                    Navigator.pop(context);
+                    _showAboutAppDialog();
+                  },
+                ),
               ],
-            ),
-          ),
-
-          // Footer Versi Aplikasi
-          Container(
-            padding: const EdgeInsets.symmetric(vertical: 12),
-            child: const Text(
-              'Versi 1.0.4 Resmi • Kampung Argomulyo',
-              style: TextStyle(fontSize: 11, color: Color(0xFF94A3B8)),
             ),
           ),
         ],
@@ -668,13 +703,13 @@ class _MainPersuratanScreenState extends State<MainPersuratanScreen> {
 
   Widget _buildSectionHeader(String title) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(18, 8, 18, 4),
+      padding: const EdgeInsets.fromLTRB(18, 12, 18, 6),
       child: Text(
         title,
         style: const TextStyle(
           fontSize: 10.5,
           fontWeight: FontWeight.bold,
-          color: Color(0xFF0F6B4F),
+          color: Color(0xFF94A3B8),
           letterSpacing: 0.8,
         ),
       ),
@@ -723,8 +758,49 @@ class _MainPersuratanScreenState extends State<MainPersuratanScreen> {
       onTap: onTap,
     );
   }
-}
 
-class ColorAnimation extends AlwaysStoppedAnimation<Color> {
-  const ColorAnimation(super.value);
+  void _showAboutAppDialog() {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Row(
+          children: [
+            Icon(Icons.mark_email_read_rounded, color: Color(0xFF0F6B4F)),
+            SizedBox(width: 10),
+            Text('Tentang Aplikasi', style: TextStyle(fontSize: 17)),
+          ],
+        ),
+        content: const Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Aplikasi Resmi Persuratan & Kependudukan',
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13.5),
+            ),
+            SizedBox(height: 6),
+            Text(
+              'Pemerintah Kampung Argomulyo\nKecamatan Banjit, Kabupaten Way Kanan\nProvinsi Lampung',
+              style: TextStyle(fontSize: 12.5, color: Color(0xFF475569)),
+            ),
+            SizedBox(height: 12),
+            Text(
+              'Versi: 1.0.7 (Stabil & Super Ringan)',
+              style: TextStyle(fontSize: 12, color: Color(0xFF0F6B4F), fontWeight: FontWeight.bold),
+            ),
+          ],
+        ),
+        actions: [
+          FilledButton(
+            style: FilledButton.styleFrom(
+              backgroundColor: const Color(0xFF0F6B4F),
+            ),
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Tutup'),
+          ),
+        ],
+      ),
+    );
+  }
 }

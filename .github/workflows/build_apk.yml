@@ -50,15 +50,15 @@ jobs:
         if: github.ref == 'refs/heads/main'
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v1.0.6
-          name: "Surat Argomulyo Mobile v1.0.6 Resmi (Auto-Update Otomatis & Keystore Permanen)"
+          tag_name: v1.0.7
+          name: "Surat Argomulyo Mobile v1.0.7 Resmi (Perbaikan Layar Hitam, Kedip & Performa Halus)"
           body: |
-            ### 📱 Aplikasi Resmi Persuratan & Administrasi Desa Kampung Argomulyo v1.0.6
-            - **Pembaruan Sistem & Stabilitas Update Otomatis:**
-              1. **Kunci Tanda Tangan APK Permanen (Release Keystore):** Memperbaiki masalah bentrok paket pembaruan (*App not installed / Signature mismatch*) dengan menggunakan sertifikat penandatanganan rilis yang konsisten secara permanen.
-              2. **Update Otomatis Dalam Aplikasi (In-App Auto-Update):** Pop-up notifikasi pembaruan langsung mengunduh dan memasang aplikasi secara instan tanpa perlu unduh manual dari browser.
-              3. **Optimalisasi Dialog & Installer:** Dialog progres interaktif dan pemanggilan installer paket yang kompatibel untuk Android 8.0 s.d. Android 14+.
-            - **Unduh APK:** Klik dan unduh file **`app-release.apk`** di bawah (atau perbarui langsung dari dalam aplikasi).
+            ### 📱 Aplikasi Resmi Persuratan & Administrasi Desa Kampung Argomulyo v1.0.7
+            - **Perbaikan Masalah Tampilan & Performa Super Ringan:**
+              1. **Perbaikan Layar Hitam & Kedip (Blink-Blink):** Mengganti mode rendering WebView ke *Hardware-Accelerated SurfaceView* asli Android, melenyapkan glitch layar hitam, kedip, dan animasi patah-patah saat berpindah menu.
+              2. **Pemuatan Halaman Instan (Anti-Stuck):** Menghilangkan overlay loading layar penuh yang kaku; digantikan dengan progress bar responsif di AppBar dan indikator ringan non-blocking sehingga layar tidak akan pernah macet/blank.
+              3. **Optimalisasi Scroll & Responsivitas:** Mengaktifkan `OverScrollMode.never` dan penanganan cache DOM storage untuk mencegah lagging saat mengisi formulir panjang.
+            - **Unduh APK:** Klik dan unduh file **`app-release.apk`** di bawah (atau perbarui langsung dari notifikasi pop-up di dalam aplikasi).
           files: |
             build/app/outputs/flutter-apk/app-release.apk
           prerelease: false
