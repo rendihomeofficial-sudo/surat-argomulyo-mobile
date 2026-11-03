@@ -1,5 +1,6 @@
 import java.util.Properties
 import java.io.FileInputStream
+import java.io.File
 
 plugins {
     id("com.android.application")
@@ -38,11 +39,15 @@ android {
                 keyAlias = keyAliasVal
                 keyPassword = keyPasswordVal
                 storePassword = storePasswordVal
-                storeFile = if (file(storeFileVal).isAbsolute) {
+                // Cek apakah file ada di rootProject atau project folder
+                val resolvedFile = if (rootProject.file(storeFileVal).exists()) {
+                    rootProject.file(storeFileVal)
+                } else if (file(storeFileVal).exists()) {
                     file(storeFileVal)
                 } else {
-                    file(storeFileVal)
+                    file("upload-keystore.jks")
                 }
+                storeFile = resolvedFile
             }
         }
     }
