@@ -50,19 +50,15 @@ jobs:
         if: github.ref == 'refs/heads/main'
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v1.0.5
-          name: "Surat Argomulyo Mobile v1.0.5 Resmi (Audit Menyeluruh & Ekspor CSV)"
+          tag_name: v1.0.6
+          name: "Surat Argomulyo Mobile v1.0.6 Resmi (Auto-Update Otomatis & Keystore Permanen)"
           body: |
-            ### 📱 Aplikasi Resmi Persuratan & Administrasi Desa Kampung Argomulyo v1.0.5
-            - **Pembaruan & Penyempurnaan Menyeluruh (Audit Release):**
-              1. **Sinkronisasi Judul AppBar Otomatis:** Judul aplikasi di bagian atas otomatis berganti mengikuti halaman yang sedang dibuka oleh pengguna (Kependudukan, SKBD, NA Nikah, Buku Tamu, dll).
-              2. **Download & Ekspor Berkas Laporan:** Integrasi penanganan otomatis unduh berkas CSV Agenda Surat & Buku Tamu yang langsung dibuka melalui aplikasi spreadsheet/Office di smartphone.
-              3. **Optimalisasi Tata Letak Formulir Mobile:** Penyesuaian responsif mobile pada menu navigasi portal horizontal dan seluruh panel kependudukan (`f103_pindah.html`, `f101_biodata_kk.html`, dll).
-            - **Fitur Utama:**
-              - Layar loading elegan berlogo resmi desa.
-              - Menu sidebar interaktif lengkap 7 kategori layanan desa.
-              - In-app Auto-Update cerdas dari GitHub Release.
-            - **Unduh APK:** Klik dan unduh file **`app-release.apk`** di bawah.
+            ### 📱 Aplikasi Resmi Persuratan & Administrasi Desa Kampung Argomulyo v1.0.6
+            - **Pembaruan Sistem & Stabilitas Update Otomatis:**
+              1. **Kunci Tanda Tangan APK Permanen (Release Keystore):** Memperbaiki masalah bentrok paket pembaruan (*App not installed / Signature mismatch*) dengan menggunakan sertifikat penandatanganan rilis yang konsisten secara permanen.
+              2. **Update Otomatis Dalam Aplikasi (In-App Auto-Update):** Pop-up notifikasi pembaruan langsung mengunduh dan memasang aplikasi secara instan tanpa perlu unduh manual dari browser.
+              3. **Optimalisasi Dialog & Installer:** Dialog progres interaktif dan pemanggilan installer paket yang kompatibel untuk Android 8.0 s.d. Android 14+.
+            - **Unduh APK:** Klik dan unduh file **`app-release.apk`** di bawah (atau perbarui langsung dari dalam aplikasi).
           files: |
             build/app/outputs/flutter-apk/app-release.apk
           prerelease: false
